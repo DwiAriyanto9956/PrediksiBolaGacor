@@ -688,9 +688,10 @@
                 'https://corsproxy.io/?',
                 'https://api.allorigins.win/raw?url=',
                 'https://api.codetabs.com/v1/proxy?url=',
-                'https://thingproxy.freeboard.io/fetch/'
+                'https://thingproxy.freeboard.io/fetch/',
+                'https://api.allorigins.win/get?url=' // Versi fallback allorigins
             ],
-            FETCH_TIMEOUT: 10000, // Menambah timeout untuk lingkungan Vercel
+            FETCH_TIMEOUT: 12000, // Menambah sedikit lagi untuk PC dengan internet lambat
             POLLING_INTERVAL: 3600000,
             AUTO_REFRESH: false
         };
@@ -769,10 +770,19 @@
                 if (!lastDataHash && displayDateText) displayDateText.innerText = `Menghubungkan Jalur ${i + 1}...`;
 
                 try {
-                    const url = proxy + encodeURIComponent(CONFIG.DATA_URL + '?t=' + Date.now());
+                    const url = proxy + encodeURIComponent(CONFIG.DATA_URL + (CONFIG.DATA_URL.includes('?') ? '&' : '?') + 't=' + Date.now());
                     const response = await fetchWithTimeout(url);
                     if (response.ok) {
-                        const rawText = await response.text();
+                        let rawText = await response.text();
+                        
+                        // Handle AllOrigins JSON wrapper if using the .win/get endpoint
+                        if (proxy.includes('allorigins.win/get')) {
+                            try {
+                                const json = JSON.parse(rawText);
+                                rawText = json.contents;
+                            } catch(e) { console.error("Gagal parse AllOrigins JSON", e); }
+                        }
+
                         if (rawText && rawText.trim().length > 100) {
                             // Coba deteksi judul dari teks dengan regex yang lebih ketat (berhenti di tag HTML)
                             const titleMatch = rawText.match(/((?:JADWAL|PREDIKSI) BOLA\s+\d+[^<]*)/i);
@@ -977,8 +987,8 @@
             const leagueOrder = [];
             const matchRegistry = new Set();
 
-            // Regex for match lines: 11/04 02.00 WIB [18] West Ham United VS [20] Wolverhampton Wanderers 0 : 1/2
-            const matchRegex = /(\d{1,2}\/\d{1,2}\s+\d{1,2}[:\.]\d{2})\s*(?:WIB)?\s+(.+?)\s+VS\s+(.+?)\s+([\d\/\.\s]+[:\-\u2013\u2014\s]+[\d\/\.]+)/i;
+            // Regex diperbarui agar lebih fleksibel menangkap skor handicap dan skor murni
+            const matchRegex = /(\d{1,2}\/\d{1,2}\s+\d{1,2}[:\.]\d{2})\s*(?:WIB)?\s+(.+?)\s+VS\s+(.+?)\s+([\d\/\.\s:,\-\u2013\u2014]+)/i;
 
             lines.forEach(line => {
                 const s = line.trim();
@@ -991,7 +1001,9 @@
                     const awayTeam = m[3].trim();
                     const scoreText = m[4].trim();
 
-                    const key = [homeTeam, awayTeam].sort().join('|') + '@' + normalizeTime(matchTime);
+                    // Key menyertakan scoreText agar handicap dan skor murni tidak saling tindih (muncul semua)
+                    const key = [homeTeam, awayTeam].sort().join('|') + '@' + normalizeTime(matchTime) + '@' + scoreText;
+                    
                     if (!matchRegistry.has(key)) {
                         matchRegistry.add(key);
                         if (!leagueMatches[lastKnownLeague]) {
@@ -1000,8 +1012,12 @@
                         }
                         leagueMatches[lastKnownLeague].push(`<tr><td>${cleanDisplayDate(matchTime)}</td><td>${formatMatchText(homeTeam + ' VS ' + awayTeam)}</td><td>${formatScoreText(scoreText)}</td></tr>`);
                     }
-                } else if (s.length > 3 && s.length < 60 && !s.toLowerCase().includes('vs') && !s.toUpperCase().includes('BOLA') && !/\d{1,2}\/\d{1,2}/.test(s)) {
-                    lastKnownLeague = s.toUpperCase();
+                } else if (s.length > 3 && s.length < 100 && !s.toLowerCase().includes('vs') && !s.toUpperCase().includes('BOLA ') && !/\d{1,2}\/\d{1,2}/.test(s)) {
+                    // Deteksi Liga: Jika bukan baris pertandingan, kemungkinan besar nama liga
+                    const potentialLeague = s.toUpperCase().replace(/[:\-\u2013\u2014]$/, '').trim();
+                    if (potentialLeague.length > 3) {
+                        lastKnownLeague = potentialLeague;
+                    }
                 }
             });
 
@@ -1039,7 +1055,7 @@
                             const scoreText = cells[2].innerText.trim();
 
                             const teams = matchText.split(/\s+vs\s+/i).map(t => cleanTeam(t).toLowerCase()).sort();
-                            const key = `${teams.join('|')}@${normalizeTime(matchTime)}`;
+                            const key = `${teams.join('|')}@${normalizeTime(matchTime)}@${scoreText}`;
 
                             if (!matchRegistry.has(key)) {
                                 matchRegistry.add(key);
