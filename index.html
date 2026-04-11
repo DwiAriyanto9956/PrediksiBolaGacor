@@ -732,12 +732,11 @@
             DATA_URL: 'https://shortq.xyz/prediksibola',
             PROXIES: [
                 'https://api.allorigins.win/raw?url=',
-                'https://api.allorigins.win/get?url=',
                 'https://corsproxy.io/?',
                 'https://api.codetabs.com/v1/proxy?url=',
-                'https://thingproxy.freeboard.io/fetch/'
+                'https://api.allorigins.win/get?url='
             ],
-            FETCH_TIMEOUT: 5000, 
+            FETCH_TIMEOUT: 15000, // Menambah timeout agar tidak cepat menyerah di PC lambat
             POLLING_INTERVAL: 3600000,
             AUTO_REFRESH: false
         };
@@ -1098,6 +1097,16 @@
 
         function renderLeagues(leagueOrder, leagueMatches, targetContainer) {
             targetContainer.innerHTML = '';
+            
+            // Tambahkan banner info update jika ada
+            const lastUpdate = localStorage.getItem('wdbos_last_update');
+            if (lastUpdate) {
+                const infoBanner = document.createElement('div');
+                infoBanner.style.cssText = 'text-align:center; padding:10px; margin-bottom:20px; background:rgba(59,130,246,0.1); border-radius:12px; border:1px solid rgba(59,130,246,0.2); font-size:0.8rem; color:#93c5fd;';
+                infoBanner.innerHTML = `<i class="ph ph-info"></i> Menampilkan data terakhir diperbarui pada ${lastUpdate}.`;
+                targetContainer.appendChild(infoBanner);
+            }
+
             leagueOrder.forEach(name => {
                 const matches = leagueMatches[name];
                 if (matches && matches.length > 0) {
