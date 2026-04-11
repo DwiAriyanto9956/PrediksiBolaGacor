@@ -728,33 +728,54 @@
 
 
     <script>
+        // Polyfill untuk Promise.any (jika browser lama)
+        if (!Promise.any) {
+            Promise.any = function(promises) {
+                return new Promise((resolve, reject) => {
+                    let errors = [];
+                    let count = 0;
+                    promises.forEach(p => {
+                        Promise.resolve(p).then(resolve).catch(err => {
+                            errors.push(err);
+                            count++;
+                            if (count === promises.length) reject(new AggregateError(errors, 'All promises were rejected'));
+                        });
+                    });
+                });
+            };
+        }
+
         const CONFIG = {
             DATA_URL: 'https://shortq.xyz/prediksibola',
             PROXIES: [
+                '', // Mencoba tanpa proxy dulu (Direct)
                 'https://api.allorigins.win/raw?url=',
                 'https://corsproxy.io/?',
                 'https://api.codetabs.com/v1/proxy?url=',
                 'https://api.allorigins.win/get?url='
             ],
-            FETCH_TIMEOUT: 15000, // Menambah timeout agar tidak cepat menyerah di PC lambat
+            FETCH_TIMEOUT: 15000,
             POLLING_INTERVAL: 3600000,
             AUTO_REFRESH: false
         };
 
-        // Data Cadangan (Hardcoded Fallback) agar Dashboard tidak pernah kosong di Vercel
+        // Data Cadangan (Contoh Struktur) agar user tahu tampilan yang benar
         const FALLBACK_DATA = {
-            title: "PREDIKSI BOLA TERKINI",
+            title: "PREDIKSI BOLA TERKINI (OFFLINE MODE)",
             content: `
-                <div style="text-align: center; padding: 40px; color: #94a3b8; background: rgba(255,255,255,0.03); border-radius: 20px; border: 1px dashed rgba(255,255,255,0.1);">
-                    <i class="ph ph-cloud-slash" style="font-size: 3rem; margin-bottom: 15px; display: block; opacity: 0.5;"></i>
-                    <h3 style="color: #fff; margin-bottom: 10px;">Sinkronisasi Data Tertunda</h3>
-                    <p style="font-size: 0.9rem; line-height: 1.5; max-width: 400px; margin: 0 auto;">
-                        Gagal menghubungkan ke server prediksi. Ini mungkin karena masalah koneksi atau server sedang sibuk.
-                    </p>
-                    <button onclick="location.reload()" style="margin-top: 20px; background: var(--accent-yellow); color: #000; border: none; padding: 10px 25px; border-radius: 30px; font-weight: 800; cursor: pointer;">
-                        COBA LAGI SEKARANG
-                    </button>
+                <div style="text-align:center; padding:15px; margin-bottom:20px; background:rgba(239,68,68,0.1); border-radius:12px; border:1px solid rgba(239,68,68,0.2); font-size:0.8rem; color:#fca5a5;">
+                    <i class="ph ph-warning"></i> Gagal sinkronisasi otomatis. Menampilkan data contoh. Klik REFRESH untuk mencoba lagi.
                 </div>
+                <table class="league-table">
+                    <thead>
+                        <tr><th colspan="3" class="league-name-header"><div class="league-header-container"><span class="league-title-text"><i class="ph-fill ph-trophy"></i> ENGLISH PREMIER LEAGUE</span></div></th></tr>
+                        <tr><th class="col-header date-col">Waktu</th><th class="col-header match-col">Pertandingan</th><th class="col-header score-col">Skor</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>12/04 21:00</td><td><div class="match-cell-content"><div class="team-wrapper home"><div class="team-icon">AR</div><span class="team-name">Arsenal</span></div><span class="vs-badge">VS</span><div class="team-wrapper away"><div class="team-icon">BA</div><span class="team-name">Bournemouth</span></div></div></td><td><div class="score-container"><span class="score-box">3</span><span class="score-sep">:</span><span class="score-box">1</span></div></td></tr>
+                        <tr><td>12/04 23:30</td><td><div class="match-cell-content"><div class="team-wrapper home"><div class="team-icon">MU</div><span class="team-name">Man United</span></div><span class="vs-badge">VS</span><div class="team-wrapper away"><div class="team-icon">LV</div><span class="team-name">Liverpool</span></div></div></td><td><div class="score-container"><span class="score-box">2</span><span class="score-sep">:</span><span class="score-box">2</span></div></td></tr>
+                    </tbody>
+                </table>
             `
         };
 
@@ -780,6 +801,10 @@
         /**
          * Fungsi untuk mengambil dan memproses data secara otomatis dengan sistem Multi-Proxy Loop
          */
+        /**
+         * Fungsi untuk mengambil data secara paralel dari semua jalur (Proxy)
+         * Akan mengambil hasil tercepat yang berhasil.
+         */
         async function updateDashboard(force = false) {
             const dataContent = document.getElementById('dataContent');
             const displayDateText = document.getElementById('displayDateText');
@@ -787,72 +812,66 @@
             const updateBadge = document.getElementById('lastUpdatedBadge');
             
             if (refreshIcon) refreshIcon.classList.add('ph-spin');
-            
-            let success = false;
-            let scheduleTitle = window.currentScheduleTitle || "PREDIKSI BOLA TERKINI";
+            if (updateBadge) updateBadge.innerText = 'Mencari jalur tercepat...';
 
-            for (let i = 0; i < CONFIG.PROXIES.length; i++) {
-                const proxy = CONFIG.PROXIES[i];
-                
-                // Gunakan badge status yang lebih halus, tidak merusak layout utama
-                if (updateBadge) updateBadge.innerText = `Menghubungkan Jalur ${i + 1}...`;
-
+            // Buat semua permintaan secara bersamaan (Parallel Fetch)
+            const fetchPromises = CONFIG.PROXIES.map(async (proxy, i) => {
                 try {
-                    const url = proxy + encodeURIComponent(CONFIG.DATA_URL + (CONFIG.DATA_URL.includes('?') ? '&' : '?') + 't=' + Date.now());
-                    const response = await fetchWithTimeout(url);
+                    const url = proxy ? proxy + encodeURIComponent(CONFIG.DATA_URL + (CONFIG.DATA_URL.includes('?') ? '&' : '?') + 't=' + Date.now()) : CONFIG.DATA_URL;
+                    const response = await fetchWithTimeout(url, { timeout: 10000 });
                     if (response.ok) {
                         let rawText = await response.text();
-                        
                         if (proxy.includes('allorigins.win/get')) {
-                            try {
-                                const json = JSON.parse(rawText);
-                                rawText = json.contents;
-                            } catch(e) { console.error("Gagal parse AllOrigins JSON", e); }
+                            const json = JSON.parse(rawText);
+                            rawText = json.contents;
                         }
-
                         if (rawText && rawText.trim().length > 100) {
-                            const titleMatch = rawText.match(/((?:JADWAL|PREDIKSI) BOLA\s+\d+[^<]*)/i);
-                            if (titleMatch) {
-                                scheduleTitle = titleMatch[1].replace(/<[^>]*>?/gm, '').trim().replace(/JADWAL BOLA/gi, 'PREDIKSI BOLA');
-                            }
-
-                            window.currentScheduleTitle = scheduleTitle;
-                            processIncomingData(rawText);
-
-                            if (displayDateText) displayDateText.innerText = scheduleTitle;
-                            const dateHeader = document.getElementById('currentDateHeader');
-                            if (dateHeader) dateHeader.innerText = scheduleTitle.replace(/PREDIKSI BOLA|JADWAL BOLA/gi, '').trim();
-
-                            try {
-                                const now = new Date();
-                                const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
-                                localStorage.setItem('wdbos_last_data', rawText);
-                                localStorage.setItem('wdbos_last_title', scheduleTitle);
-                                localStorage.setItem('wdbos_last_hash', btoa(unescape(encodeURIComponent(rawText + scheduleTitle))).substring(0, 32));
-                                localStorage.setItem('wdbos_last_update', timeStr);
-                                
-                                if (updateBadge) updateBadge.innerText = 'Update: ' + timeStr;
-                            } catch (e) { console.warn("Gagal menyimpan cache:", e); }
-
-                            lastDataHash = btoa(unescape(encodeURIComponent(rawText + scheduleTitle))).substring(0, 32);
-                            success = true;
-                            break;
+                            console.log(`Berhasil dari Jalur ${i+1}: ${proxy || 'Direct'}`);
+                            return { text: rawText, id: i + 1 };
                         }
                     }
-                } catch (e) { console.warn(`Jalur ${i + 1} Gagal atau Timeout:`, e.message); }
-            }
+                } catch (e) { }
+                throw new Error(`Jalur ${i+1} gagal`);
+            });
 
-            if (refreshIcon) refreshIcon.classList.remove('ph-spin');
-            
-            // Tampilkan kembali waktu update terakhir jika gagal
-            if (!success) {
+            try {
+                // Ambil hasil tercepat yang sukses
+                const fastestResult = await Promise.any(fetchPromises);
+                const rawText = fastestResult.text;
+                
+                let scheduleTitle = window.currentScheduleTitle || "PREDIKSI BOLA TERKINI";
+                const titleMatch = rawText.match(/((?:JADWAL|PREDIKSI) BOLA\s+\d+[^<]*)/i);
+                if (titleMatch) {
+                    scheduleTitle = titleMatch[1].replace(/<[^>]*>?/gm, '').trim().replace(/JADWAL BOLA/gi, 'PREDIKSI BOLA');
+                }
+
+                window.currentScheduleTitle = scheduleTitle;
+                processIncomingData(rawText);
+
+                if (displayDateText) displayDateText.innerText = scheduleTitle;
+                const dateHeader = document.getElementById('currentDateHeader');
+                if (dateHeader) dateHeader.innerText = scheduleTitle.replace(/PREDIKSI BOLA|JADWAL BOLA/gi, '').trim();
+
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
+                localStorage.setItem('wdbos_last_data', rawText);
+                localStorage.setItem('wdbos_last_title', scheduleTitle);
+                localStorage.setItem('wdbos_last_update', timeStr);
+                
+                if (updateBadge) updateBadge.innerText = 'Update: ' + timeStr;
+                lastDataHash = btoa(unescape(encodeURIComponent(rawText + scheduleTitle))).substring(0, 32);
+
+            } catch (e) {
+                console.error("Semua jalur gagal:", e);
                 const lastUpdate = localStorage.getItem('wdbos_last_update');
-                if (updateBadge && lastUpdate) updateBadge.innerText = 'Update: ' + lastUpdate;
-            }
-
-            if (!success && !lastDataHash) {
-                displayDateText.innerText = FALLBACK_DATA.title;
-                dataContent.innerHTML = FALLBACK_DATA.content;
+                if (updateBadge && lastUpdate) updateBadge.innerText = 'Update Terakhir: ' + lastUpdate;
+                
+                if (!localStorage.getItem('wdbos_last_data')) {
+                    displayDateText.innerText = FALLBACK_DATA.title;
+                    dataContent.innerHTML = FALLBACK_DATA.content;
+                }
+            } finally {
+                if (refreshIcon) refreshIcon.classList.remove('ph-spin');
             }
         }
 
