@@ -731,13 +731,13 @@
         const CONFIG = {
             DATA_URL: 'https://shortq.xyz/prediksibola',
             PROXIES: [
+                'https://api.allorigins.win/raw?url=', // Biasanya paling stabil
                 'https://corsproxy.io/?',
-                'https://api.allorigins.win/raw?url=',
                 'https://api.codetabs.com/v1/proxy?url=',
                 'https://thingproxy.freeboard.io/fetch/',
-                'https://api.allorigins.win/get?url=' // Versi fallback allorigins
+                'https://api.allorigins.win/get?url=' 
             ],
-            FETCH_TIMEOUT: 12000, // Menambah sedikit lagi untuk PC dengan internet lambat
+            FETCH_TIMEOUT: 6000, // Dikurangi menjadi 6 detik agar lebih cepat beralih ke jalur lain jika lambat
             POLLING_INTERVAL: 3600000,
             AUTO_REFRESH: false
         };
@@ -805,15 +805,18 @@
             const dataContent = document.getElementById('dataContent');
             const displayDateText = document.getElementById('displayDateText');
             const refreshIcon = document.getElementById('refreshIcon');
+            const updateBadge = document.getElementById('lastUpdatedBadge');
             
             if (refreshIcon) refreshIcon.classList.add('ph-spin');
             
             let success = false;
-            let scheduleTitle = "PREDIKSI BOLA TERKINI";
+            let scheduleTitle = window.currentScheduleTitle || "PREDIKSI BOLA TERKINI";
 
             for (let i = 0; i < CONFIG.PROXIES.length; i++) {
                 const proxy = CONFIG.PROXIES[i];
-                if (!lastDataHash && displayDateText) displayDateText.innerText = `Menghubungkan Jalur ${i + 1}...`;
+                
+                // Gunakan badge status yang lebih halus, tidak merusak layout utama
+                if (updateBadge) updateBadge.innerText = `Menghubungkan Jalur ${i + 1}...`;
 
                 try {
                     const url = proxy + encodeURIComponent(CONFIG.DATA_URL + (CONFIG.DATA_URL.includes('?') ? '&' : '?') + 't=' + Date.now());
@@ -821,7 +824,6 @@
                     if (response.ok) {
                         let rawText = await response.text();
                         
-                        // Handle AllOrigins JSON wrapper if using the .win/get endpoint
                         if (proxy.includes('allorigins.win/get')) {
                             try {
                                 const json = JSON.parse(rawText);
@@ -830,16 +832,9 @@
                         }
 
                         if (rawText && rawText.trim().length > 100) {
-                            // Coba deteksi judul dari teks dengan regex yang lebih ketat (berhenti di tag HTML)
                             const titleMatch = rawText.match(/((?:JADWAL|PREDIKSI) BOLA\s+\d+[^<]*)/i);
                             if (titleMatch) {
                                 scheduleTitle = titleMatch[1].replace(/<[^>]*>?/gm, '').trim().replace(/JADWAL BOLA/gi, 'PREDIKSI BOLA');
-                            } else {
-                                // Default title based on today
-                                const now = new Date();
-                                const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-                                const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                                scheduleTitle = `PREDIKSI BOLA ${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
                             }
 
                             window.currentScheduleTitle = scheduleTitle;
@@ -849,7 +844,6 @@
                             const dateHeader = document.getElementById('currentDateHeader');
                             if (dateHeader) dateHeader.innerText = scheduleTitle.replace(/PREDIKSI BOLA|JADWAL BOLA/gi, '').trim();
 
-                            // Simpan ke Cache untuk Instant Load berikutnya
                             try {
                                 const now = new Date();
                                 const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
@@ -858,7 +852,6 @@
                                 localStorage.setItem('wdbos_last_hash', btoa(unescape(encodeURIComponent(rawText + scheduleTitle))).substring(0, 32));
                                 localStorage.setItem('wdbos_last_update', timeStr);
                                 
-                                const updateBadge = document.getElementById('lastUpdatedBadge');
                                 if (updateBadge) updateBadge.innerText = 'Update: ' + timeStr;
                             } catch (e) { console.warn("Gagal menyimpan cache:", e); }
 
@@ -872,21 +865,15 @@
 
             if (refreshIcon) refreshIcon.classList.remove('ph-spin');
             
+            // Tampilkan kembali waktu update terakhir jika gagal
+            if (!success) {
+                const lastUpdate = localStorage.getItem('wdbos_last_update');
+                if (updateBadge && lastUpdate) updateBadge.innerText = 'Update: ' + lastUpdate;
+            }
+
             if (!success && !lastDataHash) {
-                // Tampilkan data fallback jika koneksi benar-benar gagal dan tidak ada cache
                 displayDateText.innerText = FALLBACK_DATA.title;
                 dataContent.innerHTML = FALLBACK_DATA.content;
-                
-                // Tambahkan peringatan kecil di bawah
-                const errorAlert = document.createElement('div');
-                errorAlert.style.textAlign = 'center';
-                errorAlert.style.marginTop = '20px';
-                errorAlert.style.color = '#ef4444';
-                errorAlert.innerHTML = `<i class="ph ph-warning"></i> Sinkronisasi Gagal. Menampilkan data cadangan.`;
-                dataContent.appendChild(errorAlert);
-            } else if (!success && lastDataHash) {
-                // Jika gagal tapi ada data lama, beri notifikasi kecil (opsional)
-                console.log("Menampilkan data cache karena fetch gagal.");
             }
         }
 
