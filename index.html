@@ -731,50 +731,30 @@
         const CONFIG = {
             DATA_URL: 'https://shortq.xyz/prediksibola',
             PROXIES: [
-                'https://api.allorigins.win/raw?url=', // Biasanya paling stabil
+                'https://api.allorigins.win/raw?url=',
+                'https://api.allorigins.win/get?url=',
                 'https://corsproxy.io/?',
                 'https://api.codetabs.com/v1/proxy?url=',
-                'https://thingproxy.freeboard.io/fetch/',
-                'https://api.allorigins.win/get?url=' 
+                'https://thingproxy.freeboard.io/fetch/'
             ],
-            FETCH_TIMEOUT: 6000, // Dikurangi menjadi 6 detik agar lebih cepat beralih ke jalur lain jika lambat
+            FETCH_TIMEOUT: 5000, 
             POLLING_INTERVAL: 3600000,
             AUTO_REFRESH: false
         };
 
         // Data Cadangan (Hardcoded Fallback) agar Dashboard tidak pernah kosong di Vercel
         const FALLBACK_DATA = {
-            title: "PREDIKSI BOLA 10-11 APRIL 2026",
+            title: "PREDIKSI BOLA TERKINI",
             content: `
-                <table class="league-table">
-                    <thead>
-                        <tr><th colspan="3" class="league-name-header"><div class="league-header-container"><span class="league-title-text"><i class="ph-fill ph-trophy"></i> ENGLISH PREMIER LEAGUE</span></div></th></tr>
-                        <tr><th class="col-header date-col">Waktu</th><th class="col-header match-col">Pertandingan</th><th class="col-header score-col">Skor</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>11/04 02:00</td><td><div class="match-cell-content"><div class="team-wrapper home"><div class="team-icon">WH</div><span class="team-name">West Ham United</span></div><span class="vs-badge">VS</span><div class="team-wrapper away"><div class="team-icon">WW</div><span class="team-name">Wolverhampton Wanderers</span></div></div></td><td><div class="score-container"><span class="score-box">2</span><span class="score-sep">:</span><span class="score-box">1</span></div></td></tr>
-                    </tbody>
-                </table>
-                <table class="league-table">
-                    <thead>
-                        <tr><th colspan="3" class="league-name-header"><div class="league-header-container"><span class="league-title-text"><i class="ph-fill ph-trophy"></i> ITALY SERIE A</span></div></th></tr>
-                        <tr><th class="col-header date-col">Waktu</th><th class="col-header match-col">Pertandingan</th><th class="col-header score-col">Skor</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>11/04 01:45</td><td><div class="match-cell-content"><div class="team-wrapper home"><div class="team-icon">AR</div><span class="team-name">AS Roma</span></div><span class="vs-badge">VS</span><div class="team-wrapper away"><div class="team-icon">PS</div><span class="team-name">Pisa</span></div></div></td><td><div class="score-container"><span class="score-box">3</span><span class="score-sep">:</span><span class="score-box">0</span></div></td></tr>
-                    </tbody>
-                </table>
-                <table class="league-table">
-                    <thead>
-                        <tr><th colspan="3" class="league-name-header"><div class="league-header-container"><span class="league-title-text"><i class="ph-fill ph-trophy"></i> SPAIN LA LIGA</span></div></th></tr>
-                        <tr><th class="col-header date-col">Waktu</th><th class="col-header match-col">Pertandingan</th><th class="col-header score-col">Skor</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>11/04 02:00</td><td><div class="match-cell-content"><div class="team-wrapper home"><div class="team-icon">RM</div><span class="team-name">Real Madrid</span></div><span class="vs-badge">VS</span><div class="team-wrapper away"><div class="team-icon">GF</div><span class="team-name">Girona FC</span></div></div></td><td><div class="score-container"><span class="score-box">4</span><span class="score-sep">:</span><span class="score-box">1</span></div></td></tr>
-                    </tbody>
-                </table>
-                <div style="text-align:center; padding:15px; color:#94a3b8; font-size:0.8rem;">
-                    <i class="ph ph-info"></i> Menampilkan data snapshot terakhir. Klik REFRESH untuk update terbaru.
+                <div style="text-align: center; padding: 40px; color: #94a3b8; background: rgba(255,255,255,0.03); border-radius: 20px; border: 1px dashed rgba(255,255,255,0.1);">
+                    <i class="ph ph-cloud-slash" style="font-size: 3rem; margin-bottom: 15px; display: block; opacity: 0.5;"></i>
+                    <h3 style="color: #fff; margin-bottom: 10px;">Sinkronisasi Data Tertunda</h3>
+                    <p style="font-size: 0.9rem; line-height: 1.5; max-width: 400px; margin: 0 auto;">
+                        Gagal menghubungkan ke server prediksi. Ini mungkin karena masalah koneksi atau server sedang sibuk.
+                    </p>
+                    <button onclick="location.reload()" style="margin-top: 20px; background: var(--accent-yellow); color: #000; border: none; padding: 10px 25px; border-radius: 30px; font-weight: 800; cursor: pointer;">
+                        COBA LAGI SEKARANG
+                    </button>
                 </div>
             `
         };
