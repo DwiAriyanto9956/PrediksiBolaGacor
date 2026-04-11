@@ -92,27 +92,35 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 12px;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: var(--text-secondary);
             font-weight: 500;
-            margin-top: 15px;
+            margin-top: 25px;
         }
 
         .meta-info span {
             display: flex;
             align-items: center;
-            gap: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 8px 16px;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 10px 20px;
             border-radius: 50px;
-            border: 1px solid var(--glass-border);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             white-space: nowrap;
-            transition: transform 0.2s, background 0.2s;
+            transition: all 0.2s;
+            color: #cbd5e1;
+        }
+
+        .meta-info span i {
+            font-size: 1.1rem;
+            opacity: 0.8;
         }
 
         .meta-info span:hover {
-            background: rgba(255, 255, 255, 0.08);
-            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
         }
 
         /* Action Buttons */
@@ -126,46 +134,46 @@
         }
 
         .btn-modern {
-            padding: 10px 24px;
+            padding: 12px 30px;
             border-radius: 50px;
-            font-size: 0.8rem;
-            font-weight: 700;
+            font-size: 0.85rem;
+            font-weight: 800;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            border: 1px solid var(--glass-border);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             background: rgba(255, 255, 255, 0.05);
             color: #fff;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            min-height: 44px;
+            min-height: 48px;
             white-space: nowrap;
         }
 
         .btn-modern i {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
         }
 
         .btn-modern:hover {
-            transform: translateY(-2px);
+            transform: translateY(-3px);
             background: rgba(255, 255, 255, 0.1);
             border-color: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
         }
 
         .btn-modern.highlight {
-            background: var(--accent-yellow);
+            background: #c3ed07;
             color: #000;
             border: none;
-            font-weight: 800;
+            box-shadow: 0 4px 15px rgba(195, 237, 7, 0.2);
         }
 
         .btn-modern.highlight:hover {
-            background: #e1ff00;
-            box-shadow: 0 8px 25px rgba(195, 237, 7, 0.3);
+            background: #d4ff00;
+            box-shadow: 0 10px 30px rgba(195, 237, 7, 0.4);
         }
 
         /* Content Container */
