@@ -1032,8 +1032,8 @@
                     const awayTeam = m[3].trim();
                     const scoreText = m[4].trim();
 
-                    // Key menyertakan scoreText agar handicap dan skor murni tidak saling tindih (muncul semua)
-                    const key = [homeTeam, awayTeam].sort().join('|') + '@' + normalizeTime(matchTime) + '@' + scoreText;
+                    // Key tanpa scoreText agar satu pertandingan hanya muncul 1 kali
+                    const key = [homeTeam, awayTeam].sort().join('|') + '@' + normalizeTime(matchTime);
                     
                     if (!matchRegistry.has(key)) {
                         matchRegistry.add(key);
@@ -1086,7 +1086,8 @@
                             const scoreText = cells[2].innerText.trim();
 
                             const teams = matchText.split(/\s+vs\s+/i).map(t => cleanTeam(t).toLowerCase()).sort();
-                            const key = `${teams.join('|')}@${normalizeTime(matchTime)}@${scoreText}`;
+                            // Key tanpa scoreText agar satu pertandingan hanya muncul 1 kali
+                            const key = `${teams.join('|')}@${normalizeTime(matchTime)}`;
 
                             if (!matchRegistry.has(key)) {
                                 matchRegistry.add(key);
