@@ -1117,15 +1117,6 @@
         function renderLeagues(leagueOrder, leagueMatches, targetContainer) {
             targetContainer.innerHTML = '';
             
-            // Tambahkan banner info update jika ada
-            const lastUpdate = localStorage.getItem('wdbos_last_update');
-            if (lastUpdate) {
-                const infoBanner = document.createElement('div');
-                infoBanner.style.cssText = 'text-align:center; padding:10px; margin-bottom:20px; background:rgba(59,130,246,0.1); border-radius:12px; border:1px solid rgba(59,130,246,0.2); font-size:0.8rem; color:#93c5fd;';
-                infoBanner.innerHTML = `<i class="ph ph-info"></i> Menampilkan data terakhir diperbarui pada ${lastUpdate}.`;
-                targetContainer.appendChild(infoBanner);
-            }
-
             leagueOrder.forEach(name => {
                 const matches = leagueMatches[name];
                 if (matches && matches.length > 0) {
