@@ -89,62 +89,83 @@
         .meta-info {
             display: flex;
             justify-content: center;
-            gap: 25px;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
             font-size: 0.8rem;
             color: var(--text-secondary);
             font-weight: 500;
+            margin-top: 15px;
         }
 
         .meta-info span {
             display: flex;
             align-items: center;
             gap: 8px;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 6px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 16px;
             border-radius: 50px;
             border: 1px solid var(--glass-border);
+            white-space: nowrap;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .meta-info span:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-1px);
         }
 
         /* Action Buttons */
         .action-flex {
             display: flex;
             justify-content: center;
-            gap: 15px;
-            margin-top: 30px;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 25px;
         }
 
         .btn-modern {
-            padding: 12px 28px;
+            padding: 10px 24px;
             border-radius: 50px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 10px;
             text-transform: uppercase;
             letter-spacing: 1px;
             border: 1px solid var(--glass-border);
-            background: var(--glass-bg);
+            background: rgba(255, 255, 255, 0.05);
             color: #fff;
-            transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 44px;
+            white-space: nowrap;
+        }
+
+        .btn-modern i {
+            font-size: 1.2rem;
         }
 
         .btn-modern:hover {
             transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
         }
 
         .btn-modern.highlight {
             background: var(--accent-yellow);
             color: #000;
             border: none;
+            font-weight: 800;
         }
 
         .btn-modern.highlight:hover {
             background: #e1ff00;
-            box-shadow: 0 10px 30px rgba(195, 237, 7, 0.4);
+            box-shadow: 0 8px 25px rgba(195, 237, 7, 0.3);
         }
 
         /* Content Container */
@@ -460,22 +481,41 @@
 
         @media (max-width: 768px) {
             .main-wrapper {
-                padding: 20px 10px;
+                padding: 40px 15px;
+            }
+
+            .branding-header {
+                margin-bottom: 40px;
             }
 
             .branding-header h1 {
-                font-size: 1.8rem;
-                letter-spacing: 1px;
-            }
-
-            .branding-header p {
-                font-size: 0.8rem;
+                font-size: clamp(1.8rem, 8vw, 2.5rem);
+                margin-bottom: 15px;
             }
 
             .meta-info {
-                flex-wrap: wrap;
-                gap: 10px;
+                gap: 8px;
+                padding: 0 10px;
+            }
+
+            .meta-info span {
+                padding: 6px 12px;
                 font-size: 0.7rem;
+                flex: 1 1 calc(50% - 10px); /* 2 per row on mobile */
+                justify-content: center;
+                min-width: 140px;
+            }
+
+            .action-flex {
+                flex-direction: column;
+                width: 100%;
+                gap: 10px;
+            }
+
+            .btn-modern {
+                width: 100%;
+                padding: 12px;
+                font-size: 0.75rem;
             }
 
             .content-container {
@@ -651,14 +691,12 @@
                 <span><i class="ph ph-clock"></i> <span id="lastUpdatedBadge">Menyingkronkan...</span></span>
                 <span><i class="ph ph-star"></i> Sticky post</span>
             </div>
-            <div style="margin-top: 15px; display: flex; justify-content: center; gap: 15px;">
-                <button id="refreshBtnMain"
-                    style="background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid #444; padding: 10px 20px; border-radius: 30px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
+            <div class="action-flex">
+                <button id="refreshBtnMain" class="btn-modern">
                     <i class="ph-bold ph-arrows-clockwise" id="refreshIcon"></i> REFRESH DATA
                 </button>
-                <button id="copyBtn"
-                    style="background: var(--accent-yellow); color: #000; border: none; padding: 10px 20px; border-radius: 30px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: transform 0.2s;">
-                    <i class="ph-bold ph-copy" style="font-size: 1.2rem;"></i> SALIN SCRIPT JADWAL
+                <button id="copyBtn" class="btn-modern highlight">
+                    <i class="ph-bold ph-copy"></i> SALIN SCRIPT JADWAL
                 </button>
             </div>
         </div>
