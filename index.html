@@ -366,9 +366,9 @@
         .team-icon {
             width: 32px;
             height: 32px;
-            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-            border: 1px solid #cbd5e1;
-            color: #475569;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -376,8 +376,14 @@
             font-size: 0.75rem;
             font-weight: 900;
             flex-shrink: 0;
-            text-transform: uppercase;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .team-icon img {
+            width: 24px !important;
+            height: 24px !important;
+            object-fit: contain;
         }
 
         .team-name {
@@ -920,15 +926,27 @@
                 const homeTeam = cleanTeam(parts[0]);
                 const awayTeam = cleanTeam(parts[1]);
 
+                const renderLogo = (name) => {
+                    const initials = getInitials(name);
+                    // Slug untuk URL logo (contoh: "Real Madrid" -> "real-madrid")
+                    const slug = name.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
+                    return `
+                        <img src="https://raw.githubusercontent.com/luukid/football-logos/master/logos/${slug}.png" 
+                             alt="${initials}" 
+                             style="width: 24px; height: 24px; object-fit: contain; display: block;" 
+                             onerror="this.style.display='none'; this.parentElement.innerText='${initials}'">
+                    `;
+                };
+
                 return `
                     <div class="match-cell-content">
                         <div class="team-wrapper home">
-                            <div class="team-icon">${getInitials(homeTeam)}</div>
+                            <div class="team-icon">${renderLogo(homeTeam)}</div>
                             <span class="team-name">${homeTeam}</span>
                         </div>
                         <span class="vs-badge">VS</span>
                         <div class="team-wrapper away">
-                            <div class="team-icon">${getInitials(awayTeam)}</div>
+                            <div class="team-icon">${renderLogo(awayTeam)}</div>
                             <span class="team-name">${awayTeam}</span>
                         </div>
                     </div>
@@ -1287,6 +1305,11 @@ async function wdbosUpdate() {
                 const nT = (t) => t.trim().replace(/[\.\s]+/g, ':').replace(/(\d{2}):(\d{2})/, '$1:$2').trim();
                 const gI = (n) => { const w = n.split(' '); return w.length > 1 ? (w[0][0].toUpperCase() + w[1][0].toUpperCase()) : n.substring(0, 2).toUpperCase(); };
                 const cD = (d) => d.replace(/WIB/gi, '').trim();
+                const rL = (n) => { 
+                    const i = gI(n); 
+                    const s = n.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, ''); 
+                    return '<img src="https://raw.githubusercontent.com/luukid/football-logos/master/logos/'+s+'.png" style="width:24px;height:24px;object-fit:contain;display:block;" onerror="this.style.display=\'none\';this.parentElement.innerText=\''+i+'\'">'; 
+                };
 
                 const matchReg = new Set();
                 const leagueO = [];
@@ -1308,7 +1331,7 @@ async function wdbosUpdate() {
                                 const pX = match.split(/\s+VS\s+/i); 
                                 if (pX.length >= 2) {
                                     const hX = cT(pX[0]), aX = cT(pX[1]);
-                                    const mUI = '<div class="match-cell-content"><div class="team-wrapper home"><div class="team-icon">' + gI(hX) + '</div><span class="team-name">' + hX + '</span></div><span class="vs-badge">VS</span><div class="team-wrapper away"><div class="team-icon">' + gI(aX) + '</div><span class="team-name">' + aX + '</span></div></div>';
+                                    const mUI = '<div class="match-cell-content"><div class="team-wrapper home"><div class="team-icon">' + rL(hX) + '</div><span class="team-name">' + hX + '</span></div><span class="vs-badge">VS</span><div class="team-wrapper away"><div class="team-icon">' + rL(aX) + '</div><span class="team-name">' + aX + '</span></div></div>';
                                     const sUI = '<div class="score-container"><span class="score-box">?</span><span class="score-sep">:</span><span class="score-box">?</span></div>';
                                     leagueM[cL].push('<tr><td>' + cD(time) + '</td><td>' + mUI + '</td><td>' + sUI + '</td></tr>');
                                 }
@@ -1334,7 +1357,7 @@ async function wdbosUpdate() {
                             if (!matchReg.has(key)) {
                                 matchReg.add(key);
                                 if (!leagueM[cL]) { leagueM[cL] = []; leagueO.push(cL); }
-                                const mUI = '<div class="match-cell-content"><div class="team-wrapper home"><div class="team-icon">' + gI(home) + '</div><span class="team-name">' + home + '</span></div><span class="vs-badge">VS</span><div class="team-wrapper away"><div class="team-icon">' + gI(away) + '</div><span class="team-name">' + away + '</span></div></div>';
+                                const mUI = '<div class="match-cell-content"><div class="team-wrapper home"><div class="team-icon">' + rL(home) + '</div><span class="team-name">' + home + '</span></div><span class="vs-badge">VS</span><div class="team-wrapper away"><div class="team-icon">' + rL(away) + '</div><span class="team-name">' + away + '</span></div></div>';
                                 const sUI = '<div class="score-container"><span class="score-box">?</span><span class="score-sep">:</span><span class="score-box">?</span></div>';
                                 leagueM[cL].push('<tr><td>' + cD(time) + '</td><td>' + mUI + '</td><td>' + sUI + '</td></tr>');
                             }
