@@ -366,8 +366,8 @@
         .team-icon {
             width: 36px;
             height: 36px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: #fff;
             border-radius: 50%;
             display: flex;
@@ -377,13 +377,15 @@
             font-weight: 900;
             flex-shrink: 0;
             overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-transform: uppercase;
         }
 
         .team-icon img {
             width: 28px !important;
             height: 28px !important;
             object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
         }
 
         .team-name {
@@ -765,8 +767,17 @@
 
         const renderLogo = (name) => {
             const initials = getInitials(name);
-            const slug = name.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
-            return `<img src="https://raw.githubusercontent.com/luukid/football-logos/master/logos/${slug}.png" alt="${initials}" style="width:28px;height:28px;object-fit:contain;display:block;" onerror="this.style.display='none';this.parentElement.innerText='${initials}'">`;
+            const slug = name.toLowerCase()
+                             .replace(/manchester city/g, 'man-city')
+                             .replace(/manchester united/g, 'man-utd')
+                             .replace(/tottenham hotspur/g, 'tottenham')
+                             .replace(/nottingham forest/g, 'nottingham')
+                             .replace(/crystal palace/g, 'crystal-palace')
+                             .trim()
+                             .replace(/\s+/g, '-')
+                             .replace(/[^a-z0-9\-]/g, '');
+            
+            return `<img src="https://raw.githubusercontent.com/luukid/football-logos/master/logos/${slug}.png" alt="${initials}" style="width:28px;height:28px;object-fit:contain;display:block;" onerror="this.style.display='none'; this.parentElement.innerHTML='${initials}'">`;
         };
 
         const formatMatchText = (text) => {
